@@ -1,0 +1,12 @@
+#%RAML 1.0 Trait
+responses:  
+  406:
+    body:
+      application/json:
+        type: standardError
+        example:
+          correlationId: fe5zef1-194b-475c-8dee-0zef56zf4180
+          statusCode: 406
+          namespace: RESOURCE_NAME
+          identifier: NOT_ACCEPTABLE
+          description: <<resourcePathName|!singularize>> already exists.
