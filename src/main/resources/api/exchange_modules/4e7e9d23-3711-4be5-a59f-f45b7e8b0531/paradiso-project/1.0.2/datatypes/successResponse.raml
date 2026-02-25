@@ -1,0 +1,18 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+  correlationId:
+    type: string
+    example: 7fed2b4e-175f-41a0-9dd4-25a54667c426
+  statusCode:
+    type: number
+    example: 200
+  dateTime:
+    type: datetime-only
+    example: 2025-10-23T16:18:00
+  message:
+    type: string
+    example: Operation completed successfully
+  data?:
+    type: any
+    description: main data

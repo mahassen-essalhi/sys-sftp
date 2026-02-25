@@ -1,0 +1,38 @@
+#%RAML 1.0 Library
+usage: Definitions for Invoice and Customer data structures.
+
+types:
+  Customer:
+    type: object
+    properties:
+      id: string
+      city: string
+      country: string
+      postalCode: string
+      email: string
+      name: string
+      phone: string
+
+  LineItem:
+    type: object
+    properties:
+      id: string
+      amount: number
+
+  Invoice:
+    type: object
+    properties:
+      id: string
+      total: 
+        type: number
+        
+      currency: 
+        type: string
+        
+      date: 
+        type: date-only
+       
+      customer: Customer
+      lineItems: LineItem[]
+
+  

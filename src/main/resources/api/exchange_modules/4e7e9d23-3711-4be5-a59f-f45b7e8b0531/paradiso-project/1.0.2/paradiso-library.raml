@@ -1,0 +1,33 @@
+#%RAML 1.0 Library
+usage: Global library for the Paradiso project
+
+##########
+# Security
+##########
+securitySchemes:
+  clientIdEnforcement: !include security-schemes/clientId-enforcement.raml
+
+###########
+# Resources
+###########
+resourceTypes:
+  CRUD-collection: !include resourcetypes/CRUD-collection.raml
+  CRUD-item: !include resourcetypes/CRUD-item.raml
+  pagination: !include resourcetypes/pagination.raml
+
+#######
+# Types
+#######
+types:
+  standardError: !include datatypes/errorResponse.raml
+  standardSuccess: !include datatypes/successResponse.raml
+
+########
+# Traits
+########
+traits:
+  error400: !include traits/error-400.raml
+  error404: !include traits/error-404.raml
+  error406: !include traits/error-406.raml
+  error409: !include traits/error-409.raml
+  error500: !include traits/error-500.raml

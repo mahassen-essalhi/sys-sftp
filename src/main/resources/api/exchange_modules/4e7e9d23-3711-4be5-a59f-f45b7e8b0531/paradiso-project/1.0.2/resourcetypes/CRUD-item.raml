@@ -1,0 +1,90 @@
+#%RAML 1.0 ResourceType
+get?:
+  is:
+    - error500:
+    - error404:
+  description: Retrieve <<resourcePathName|!singularize>>
+  displayName: Retrieve <<resourcePathName|!singularize>>
+  responses:
+    200:
+      body:
+        application/json:
+          type: object
+          properties:
+            correlationId:
+              type: string
+              example: 7fed2b4e-175f-41a0-9dd4-25a54667c426
+            statusCode:
+              type: number
+              example: 200
+            dateTime:
+              type: datetime-only
+              example: 2025-10-23T16:18:00
+            message:
+              type: string
+              example: Operation completed successfully
+            data: <<resourceType>>
+
+patch?:
+  is:
+    - error500:
+  description: Modify partially <<resourcePathName|!singularize>>
+  displayName: Modify partially <<resourcePathName|!singularize>>
+  body:
+    application/json:
+      # Add <<resourceType>> with optional fields
+      additionalProperties: false
+      type: object
+  responses:
+    200:
+      body:
+        application/json:
+          type: object
+          properties:
+            correlationId:
+              type: string
+              example: 7fed2b4e-175f-41a0-9dd4-25a54667c426
+            statusCode:
+              type: number
+              example: 200
+            dateTime:
+              type: datetime-only
+              example: 2025-10-23T16:18:00
+            message:
+              type: string
+              example: <<resourcePathName>> modified successfully.
+
+put?:
+  is:
+    - error500:
+  description: Update totally <<resourcePathName|!singularize>>
+  displayName: Update totally <<resourcePathName|!singularize>>
+  body:
+    application/json:
+      type: <<resourceType>>
+  responses:
+    200:
+      body:
+        application/json:
+          type: object
+          properties:
+            correlationId:
+              type: string
+              example: 7fed2b4e-175f-41a0-9dd4-25a54667c426
+            statusCode:
+              type: number
+              example: 200
+            dateTime:
+              type: datetime-only
+              example: 2025-10-23T16:18:00
+            message:
+              type: string
+              example: <<resourcePathName|!singularize>> updated successfully.
+
+delete?:
+  is:
+    - error500:
+  description: Remove <<resourcePathName|!singularize>>
+  displayName: Remove <<resourcePathName|!singularize>>
+  responses:
+    204:
