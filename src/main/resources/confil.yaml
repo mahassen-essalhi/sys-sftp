@@ -1,0 +1,6 @@
+sftp:
+  host: "sftp.px.bylinkr.com"
+  port: "8422"
+  username: "linkr"
+  password: "linkr2026"
+  
