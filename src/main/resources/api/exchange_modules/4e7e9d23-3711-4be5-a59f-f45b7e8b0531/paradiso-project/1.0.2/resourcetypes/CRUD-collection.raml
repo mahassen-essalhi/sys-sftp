@@ -1,0 +1,64 @@
+#%RAML 1.0 ResourceType
+get:
+  is:
+    - error500
+  description: Retrieve a paginated view of <<resourcePathName>>
+  displayName: Retrieve paginated <<resourcePathName>>
+  queryParameters:
+    pageNumber:
+      description: offset = (pageNumber - 1) * pageSize
+      type: integer
+      required: false
+      default: 1
+      minimum: 1
+      example: 18
+    pageSize:
+      description: The number of <<resourcePathName>> to return per page (=limit)
+      type: integer
+      required: false
+      minimum: 1
+      # default: 10
+      # maximum: 100
+      example: 10
+  responses:
+    200:
+      body:
+        application/json:
+          type: object
+          properties:
+            correlationId:
+              type: string
+              example: 7fed2b4e-175f-41a0-9dd4-25a54667c426
+            statusCode:
+              type: number
+              example: 200
+            dateTime:
+              type: datetime-only
+              example: 2025-10-23T16:18:00
+            message:
+              type: string
+              example: Operation completed successfully
+            pagination:
+              type: object
+              properties:
+                pageNumber:
+                  type: integer
+                  description: Current page
+                pageSize:
+                  type: integer
+                  description: Current size of the page
+                totalRows:
+                  type: integer
+                  description: Total number of <<resourcePathName>> items
+                totalPages:
+                  type: integer
+                  description: Total number of pages available (=round(totalRows / pageSize))
+              example:
+                pageNumber: 1
+                pageSize: 10
+                totalRows: 45
+                totalPages: 5
+            data:
+              type: array
+              items: <<resourceType>>
+              description: Array of <<resourcePathName>>

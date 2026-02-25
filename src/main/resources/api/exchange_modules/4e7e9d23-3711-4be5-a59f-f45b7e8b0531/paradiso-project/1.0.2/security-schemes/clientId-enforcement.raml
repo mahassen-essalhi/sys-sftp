@@ -1,0 +1,20 @@
+#%RAML 1.0 SecurityScheme
+type: Pass Through
+displayName: Client id enforcement
+describedBy:
+  headers:
+    client_id:
+      displayName: ID
+      type: string
+      example: afdfe7c157504193be5cc1ceaefa3659
+    client_secret:
+      displayName: Secret
+      type: string
+      example: C1C167e1ae8E4D56879Ddc1E0eDAc3AB
+  responses:
+    401:
+      description: Unauthorized or invalid client application credentials
+    403:
+      description: Access Forbidden
+    500:
+      description: Bad response from authorization server
