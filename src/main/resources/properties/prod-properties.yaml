@@ -5,5 +5,5 @@ sftp:
   password: "${secure::sftp.password}"
   
   
-  
-workingDirectory: upload/theu/Mahassen/Prod
+ 
+workingDirectory: upload/theu/Mahassen/Local/
