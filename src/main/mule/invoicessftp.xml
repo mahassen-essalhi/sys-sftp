@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
-http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
-http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
     <http:listener-config name="invoicessftp-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="invoicessftp-config" api="resource::4e7e9d23-3711-4be5-a59f-f45b7e8b0531:invoicessftp:1.0.0:raml:zip:invoicessftp.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="invoicessftp-config" api="resource::4e7e9d23-3711-4be5-a59f-f45b7e8b0531:invoicessftp:1.0.5:raml:zip:invoicessftp.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="invoicessftp-main">
         <http:listener config-ref="invoicessftp-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -126,12 +124,12 @@ output application/json
         </error-handler>
     </flow>
     <flow name="get:\invoices:invoicessftp-config">
-		<set-variable value="#[attributes.queryParams.currency default '']" doc:name="Currency" doc:id="310671a9-45dc-40fc-b24b-47d4766b4903" variableName="Currency"/>
-		<validation:matches-regex doc:name="Validate Query Params" doc:id="ce2fb39a-6506-497e-96e9-8f3394cb3664" value="#[vars.Currency]" regex="^(EUR|USD)?$" message="BAD_REQUEST"/>
-		<sftp:read doc:name="Get Invoices File" doc:id="a077a211-3cdf-4fd9-8732-f09f95540baa" config-ref="SFTP_Config" path="upload/theu/invoices.json" outputMimeType="application/json"/>
-		<ee:transform doc:name="Data Mapping&amp;Filter" doc:id="1dffb9be-4540-440e-944c-62c91f763167" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <set-variable value="#[attributes.queryParams.currency default '']" doc:name="Currency" doc:id="310671a9-45dc-40fc-b24b-47d4766b4903" variableName="Currency" />
+        <validation:matches-regex doc:name="Validate Query Params" doc:id="ce2fb39a-6506-497e-96e9-8f3394cb3664" value="#[vars.Currency]" regex="^(EUR|USD)?$" message="BAD_REQUEST" />
+        <sftp:read doc:name="Get Invoices File" doc:id="a077a211-3cdf-4fd9-8732-f09f95540baa" config-ref="SFTP_Config" path="upload/theu/invoices.json" outputMimeType="application/json" />
+        <ee:transform doc:name="Data Mapping&amp;Filter" doc:id="1dffb9be-4540-440e-944c-62c91f763167">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 
 fun timestampToDate(timestamp: Number) =
@@ -162,23 +160,23 @@ payload.data filter (vars.Currency == '' or upper($.currency) == vars.Currency)
         amount: line.amount
     }
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<set-variable value="#[payload]" doc:name="Mapped Data" doc:id="ff1e7a8b-03ff-4b97-b9af-96c1f944ff85" variableName="MappedData"/>
-		<logger level="INFO" message="get:\invoices:invoicessftp-config" />
-		<error-handler >
-			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6aaaf7a3-8aeb-47f3-9f12-fe46fadc0b00" >
-				<set-variable value="400" doc:name="httpStatus" doc:id="6d1d8f46-b25e-4fda-bdb0-52f1a90165b3" variableName="httpStatus"/>
-				<set-variable value="BAD_REQUEST" doc:name="ErrorMessage" doc:id="dc655192-a79c-4bbd-b40c-556fd79ebf80" variableName="ErrorMessage"/>
-			</on-error-propagate>
-		</error-handler>
+            </ee:message>
+        </ee:transform>
+        <set-variable value="#[payload]" doc:name="Mapped Data" doc:id="ff1e7a8b-03ff-4b97-b9af-96c1f944ff85" variableName="MappedData" />
+        <logger level="INFO" message="get:\invoices:invoicessftp-config" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6aaaf7a3-8aeb-47f3-9f12-fe46fadc0b00">
+                <set-variable value="400" doc:name="httpStatus" doc:id="6d1d8f46-b25e-4fda-bdb0-52f1a90165b3" variableName="httpStatus" />
+                <set-variable value="BAD_REQUEST" doc:name="ErrorMessage" doc:id="dc655192-a79c-4bbd-b40c-556fd79ebf80" variableName="ErrorMessage" />
+            </on-error-propagate>
+        </error-handler>
     </flow>
     <flow name="get:\invoices\(id):invoicessftp-config">
-		<set-variable value="#[attributes.uriParams.id]" doc:name="Id" doc:id="67e54553-84c1-4d6f-b931-3686f5da689a" variableName="Id"/>
-		<sftp:read doc:name="Get Invoices File" doc:id="5f80a8c7-9b5e-4613-acea-506d407329c7" config-ref="SFTP_Config" path="upload/theu/invoices.json" outputMimeType="application/json" />
-		<ee:transform doc:name="Data Mapping&amp;Filter" doc:id="12fba63e-ab98-431a-8ab8-017a50aa37dc">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
+        <set-variable value="#[attributes.uriParams.id]" doc:name="Id" doc:id="67e54553-84c1-4d6f-b931-3686f5da689a" variableName="Id" />
+        <sftp:read doc:name="Get Invoices File" doc:id="5f80a8c7-9b5e-4613-acea-506d407329c7" config-ref="SFTP_Config" path="upload/theu/invoices.json" outputMimeType="application/json" />
+        <ee:transform doc:name="Data Mapping&amp;Filter" doc:id="12fba63e-ab98-431a-8ab8-017a50aa37dc">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 
 fun timestampToDate(timestamp: Number) =
@@ -209,17 +207,39 @@ payload.data filter ($.id == vars.Id)
         amount: line.amount
     }
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+            </ee:message>
+        </ee:transform>
         <set-variable value="#[if (isEmpty(payload)) [] else payload]" doc:name="Mapped Data" doc:id="31c74a1f-9b8d-4ee0-8a5a-7b990357a7cc" variableName="MappedData" />
-		<validation:is-not-empty-collection doc:name="Invoice Found?" doc:id="fa63e5cc-4569-45f7-b160-2778778aadfb" values="#[vars.MappedData]"/>
-		<logger level="INFO" message="get:\invoices\(id):invoicessftp-config" />
-		<error-handler >
-			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2b5cb819-b5c6-4b64-9f15-d92909bd64e8" >
-				<set-variable value="707" doc:name="httpStatus" doc:id="d467bd93-5fe9-4140-a1a9-cbcc3f0ae62b" variableName="httpStatus"/>
-				<set-variable value='#["invoice not found for customer " ++ (vars.Id default "unknown")]' doc:name="ErrorMessage" doc:id="c9091ad6-59d8-41b1-88dc-7d0b0ebd2cd6" variableName="ErrorMessage"/>
-				<set-variable value="Sorry" doc:name="ReasonPhrase" doc:id="1bb83a95-4ab7-4426-8358-3bb766703553" variableName="ReasonPhrase"/>
-			</on-error-propagate>
-		</error-handler>
+        <validation:is-not-empty-collection doc:name="Invoice Found?" doc:id="fa63e5cc-4569-45f7-b160-2778778aadfb" values="#[vars.MappedData]" />
+        <logger level="INFO" message="get:\invoices\(id):invoicessftp-config" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2b5cb819-b5c6-4b64-9f15-d92909bd64e8">
+                <set-variable value="707" doc:name="httpStatus" doc:id="d467bd93-5fe9-4140-a1a9-cbcc3f0ae62b" variableName="httpStatus" />
+                <set-variable value="#[&quot;invoice not found for customer &quot; ++ (vars.Id default &quot;unknown&quot;)]" doc:name="ErrorMessage" doc:id="c9091ad6-59d8-41b1-88dc-7d0b0ebd2cd6" variableName="ErrorMessage" />
+                <set-variable value="Sorry" doc:name="ReasonPhrase" doc:id="1bb83a95-4ab7-4426-8358-3bb766703553" variableName="ReasonPhrase" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="delete:\products\(id):invoicessftp-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="delete:\products\(id):invoicessftp-config" />
+    </flow>
+    <flow name="get:\products:invoicessftp-config">
+        <logger level="INFO" message="get:\products:invoicessftp-config" />
+    </flow>
+    <flow name="post:\products:application\json:invoicessftp-config">
+        <logger level="INFO" message="post:\products:application\json:invoicessftp-config" />
+    </flow>
+    <flow name="post:\products\(id):invoicessftp-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="post:\products\(id):invoicessftp-config" />
     </flow>
 </mule>
