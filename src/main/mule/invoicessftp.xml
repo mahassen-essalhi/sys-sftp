@@ -197,10 +197,18 @@ payload.data filter ($.id == vars.Id)
     <flow name="delete:\products\(id):invoicessftp-config">
         <set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="fe642d94-f381-42b7-9b5d-3842813fbeae" variableName="id" />
 		<set-variable value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit existe (isEmpty != true)&#10;!isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]' doc:name="Is Product Exist" doc:id="5ccae297-ca21-4f23-a745-bf7070946643" variableName="IsProductExist" />
+		<set-variable value="#[attributes.queryParams.qty default 0]" doc:name="Set qty" doc:id="60a2cf2e-6fb8-4d75-9aeb-158c16ae127c" variableName="qty"/>
 		<sftp:read doc:name="Read Products File" doc:id="d43f9de3-f6f0-410f-9e05-9c54e5ce2885" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent" />
-		<validation:is-false doc:name="Product Exist?" doc:id="b692c4a8-4584-4b95-a745-124a97fb84aa" config-ref="Validation_Config" message="NOT_ACCEPTABLE" />
-        <set-payload value="#[%dw 2.0&#10;output application/csv header=true&#10;&#10;var idProduct = vars.id&#10;---&#10;// On garde tous les produits SAUF celui qui correspond à l'ID reçu&#10;vars.FileContent filter (product) -&gt; (product.id as String != idProduct)]" doc:name="Delete the product from File content" doc:id="8e3cb359-445d-4b50-ab8c-7f8115229f84" />
-		<sftp:write doc:name="Delete Product From File" doc:id="7fdc084f-6882-419f-a2d3-dd580d49c27d" config-ref="SFTP_Config" path="${workingDirectory}/products.csv"/>
+		<validation:is-false doc:name="Product Exist?" doc:id="b692c4a8-4584-4b95-a745-124a97fb84aa" config-ref="Validation_Config" message="NOT_FOUND" />
+        <choice doc:name="Choice" doc:id="588a8e34-f46d-41ef-bd77-e8acde67b738" >
+			<when expression="#[vars.qty != null and vars.qty != 0]">
+				<set-payload value="#[%dw 2.0&#10;output application/csv header=true&#10;---&#10;vars.FileContent map (product) -&gt; {&#10;    id: product.id,&#10;    name: product.name,&#10;    category: product.category,&#10;    price: product.price,&#10;    // On soustrait la quantité récupérée de l'URL au stock actuel&#10;    stock: if (product.id as String == vars.id as String) &#10;                ((product.stock as Number) - (vars.qty as Number))&#10;           else product.stock&#10;}]" doc:name="Edit Stock" doc:id="113ebbd5-b7e5-4afd-acf2-2347db3b7828" />
+			</when>
+			<otherwise >
+				<set-payload value="#[%dw 2.0&#10;output application/csv header=true&#10;&#10;&#10;---&#10;// On garde tous les produits SAUF celui qui correspond à l'ID reçu&#10;vars.FileContent filter (product) -&gt; (product.id as String != vars.id)]" doc:name="Delete the product from File content" doc:id="8e3cb359-445d-4b50-ab8c-7f8115229f84" />
+			</otherwise>
+		</choice>
+		<sftp:write doc:name="Delete Product or Edit Stock " doc:id="7fdc084f-6882-419f-a2d3-dd580d49c27d" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" />
 		<logger level="INFO" message="#[payload]" />
     </flow>
 	<flow name="post:\products\(id):invoicessftp-config">
