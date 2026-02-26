@@ -18,9 +18,16 @@ fun getListProducts(data: Array, category: String | Null = null) =
     }
     
     
-// Vérifie si le produit est valide (renvoie true/false)
-fun validateProduct(payload) = 
-    (payload.name != null ) and
-    (payload.price != null ) and
-    (payload.category != null ) and
-    (payload.stock != null)
+/**
+* Recherche un produit par son ID et renvoie l'objet unique.
+* Renvoie null si aucun produit n'est trouvé.
+*/
+fun getProductById(data: Array, idToFind: String | Null) = 
+    (data filter (item) -> (item.id as String == idToFind))[0] 
+    map (product) -> {
+        id: product.id as Number,
+        name: product.name,
+        category: product.category,
+        price: product.price as Number,
+        stock: product.stock as Number
+    }
