@@ -4,7 +4,8 @@
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
     <apikit:config name="invoicessftp-config" api="resource::4e7e9d23-3711-4be5-a59f-f45b7e8b0531:invoicessftp:1.0.5:raml:zip:invoicessftp.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-    <flow name="invoicessftp-main">
+    <validation:config name="Validation_Config" doc:name="Validation Config" doc:id="cf0ec02d-06fb-4af5-9e4b-8e341e525b10" />
+	<flow name="invoicessftp-main">
         <http:listener config-ref="invoicessftp-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
@@ -217,14 +218,31 @@ getListProducts(payload, vars.category)]]></ee:set-payload>
 		<logger level="INFO" message="#[payload]" doc:name="Fin Get Products"/>
     </flow>
     <flow name="post:\products:application\json:invoicessftp-config">
-        <logger level="INFO" message="post:\products:application\json:invoicessftp-config" />
-    </flow>
-    <flow name="post:\products\(id):invoicessftp-config">
-        <ee:transform doc:name="Transform Message">
+        <set-variable value="#[import validateProduct from dwLibrairies::ProductsFunctions --- validateProduct(payload)]" doc:name="Is Valid Product Entries" doc:id="1b17a557-c18d-4cde-b497-bc130bd6c40d" variableName="IsValidProductEntries" />
+		<validation:is-true doc:name="Is Valid Product entries?" doc:id="410d26ad-3d6b-4c44-b547-dd2418b328cf" config-ref="Validation_Config" message="Product entries are invalid" />
+		<ee:transform doc:name="Transform Message">
             <ee:variables>
                 <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
+		<ee:transform doc:name="Get Product Data" doc:id="a45b790e-ac58-4398-a776-37c8f5c3f6fa">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+---
+{
+    // Récupération de chaque champ individuellement
+   	name: payload.name,
+    price: payload.price as Number,
+    category: payload.category,
+    stock:payload.stock as Number
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" message="post:\products:application\json:invoicessftp-config" />
+    </flow>
+    <flow name="post:\products\(id):invoicessftp-config">
         <logger level="INFO" message="post:\products\(id):invoicessftp-config" />
     </flow>
 </mule>

@@ -16,3 +16,11 @@ fun getListProducts(data: Array, category: String | Null = null) =
         price: product.price as Number,
         stock: product.stock as Number
     }
+    
+    
+// Vérifie si le produit est valide (renvoie true/false)
+fun validateProduct(payload) = 
+    (payload.name != null ) and
+    (payload.price != null ) and
+    (payload.category != null ) and
+    (payload.stock != null)
