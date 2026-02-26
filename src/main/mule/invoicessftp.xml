@@ -195,52 +195,19 @@ payload.data filter ($.id == vars.Id)
         </error-handler>
     </flow>
     <flow name="delete:\products\(id):invoicessftp-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="delete:\products\(id):invoicessftp-config" />
+        <set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="fe642d94-f381-42b7-9b5d-3842813fbeae" variableName="id" />
+		<set-variable value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit existe (isEmpty != true)&#10;!isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]' doc:name="Is Product Exist" doc:id="5ccae297-ca21-4f23-a745-bf7070946643" variableName="IsProductExist" />
+		<sftp:read doc:name="Read Products File" doc:id="d43f9de3-f6f0-410f-9e05-9c54e5ce2885" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent" />
+		<validation:is-false doc:name="Product Exist?" doc:id="b692c4a8-4584-4b95-a745-124a97fb84aa" config-ref="Validation_Config" message="NOT_ACCEPTABLE" />
+        <set-payload value="#[%dw 2.0&#10;output application/csv header=true&#10;&#10;var idProduct = vars.id&#10;---&#10;// On garde tous les produits SAUF celui qui correspond à l'ID reçu&#10;vars.FileContent filter (product) -&gt; (product.id as String != idProduct)]" doc:name="Delete the product from File content" doc:id="8e3cb359-445d-4b50-ab8c-7f8115229f84" />
+		<sftp:write doc:name="Delete Product From File" doc:id="7fdc084f-6882-419f-a2d3-dd580d49c27d" config-ref="SFTP_Config" path="${workingDirectory}/products.csv"/>
+		<logger level="INFO" message="#[payload]" />
     </flow>
-    <flow name="get:\products:invoicessftp-config">
-        <logger level="DEBUG" doc:name="Logger" doc:id="95445ac1-d892-4ff1-9b30-efa32b0ba1b1" message='#[payload]'/>
-		<set-variable value="#[attributes.queryParams.category]" doc:name="Set Category" doc:id="50e98e58-9208-4ca9-a783-8081f976a68b" variableName="category"/>
-		<sftp:read doc:name="Read Products File" doc:id="d37481b6-cee8-4c66-8ce7-114e99321e0e" config-ref="SFTP_Config" path="${workingDirectory}/products.csv"  outputMimeType='text/csv; separator=","; header=true'/>
-		<ee:transform doc:name="Mapping Products Data" doc:id="9e8cf89b-f44c-4654-a85b-e88f4757ed90" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
-import getListProducts from dwLibrairies::ProductsFunctions
----
-getListProducts(payload, vars.category)]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<logger level="INFO" message="#[payload]" doc:name="Fin Get Products"/>
-    </flow>
-    <flow name="post:\products:application\json:invoicessftp-config">
-        <set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="9d45278e-7a5c-425f-bdfb-e234b3426c31" variableName="id" />
-		<sftp:read doc:name="Read Products File" doc:id="aea0299e-75a3-4112-a385-1118469bff13" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent"/>
-		<set-variable doc:name="Is New Product" doc:id="1b17a557-c18d-4cde-b497-bc130bd6c40d" variableName="IsNewProduct" value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit est introuvable (isEmpty == true)&#10;isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]'/>
-		<validation:is-false doc:name="Is New Product?" doc:id="9f27c7cb-ea6c-4381-9338-174f3b42a6a6" config-ref="Validation_Config" message="NOT_ACCEPTABLE"/>
-		<ee:transform doc:name="Product Data to ADD" doc:id="bf52432a-5f4a-4773-bdb3-ef19503be6aa" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output text/plain 
-import * from dw::core::Binaries
----
-// On ajoute manuellement un saut de ligne (\n) avant le contenu CSV
-"\n" ++ write([payload], "application/csv", {"header": false})]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<sftp:write doc:name="Add New Product" doc:id="7d33eaeb-acf3-4a0f-9965-26a76150f3d4" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" mode="APPEND">
-		</sftp:write>
-		<logger level="INFO" message="post:\products:application\json:invoicessftp-config" />
-    </flow>
-    <flow name="post:\products\(id):invoicessftp-config">
-        <set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="251830b4-bfba-4576-9d9d-c36d3c6c7ac6" variableName="id" />
-		<sftp:read doc:name="Read Products File" doc:id="4a5b7775-b69b-45c6-96ab-492267086eb8" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent" />
-		<set-variable value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit existe (isEmpty != true)&#10;!isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]' doc:name="Is Product Exist" doc:id="2379473d-8c30-4657-80f6-ea80ef828918" variableName="IsProductExist" />
-		<validation:is-false doc:name="Product Exist?" doc:id="5ed81cf6-f4cc-489a-9015-108c82bc9c93" config-ref="Validation_Config" message="NOT_ACCEPTABLE" />
+	<flow name="post:\products\(id):invoicessftp-config">
+		<set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="251830b4-bfba-4576-9d9d-c36d3c6c7ac6" variableName="id" />
+		<set-variable value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit existe (isEmpty != true)&#10;!isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]' doc:name="Is Product Exist" doc:id="8a55178f-19e6-4117-8cfe-2f2a9596922b" variableName="IsProductExist" />
+		<sftp:read doc:name="Read Products File" doc:id="7a578474-64c0-4f5a-93bc-8f1b61921af2" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent" />
+		<validation:is-false doc:name="Product Exist?" doc:id="66cceb82-4bbb-4d5c-b6a8-907339f790d4" config-ref="Validation_Config" message="NOT_ACCEPTABLE" />
 		<ee:transform doc:name="Update Product Data" doc:id="d6aedd50-2dd2-480c-8167-5b1216ba3f73">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
@@ -259,7 +226,41 @@ vars.FileContent map (product) -> {
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<sftp:write doc:name="Update Product" doc:id="38faab7f-8b4a-4a36-9867-a8ac37f31570" config-ref="SFTP_Config" path="${workingDirectory}/products.csv"/>
+		<sftp:write doc:name="Update Product" doc:id="38faab7f-8b4a-4a36-9867-a8ac37f31570" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" />
 		<logger level="INFO" message="#[payload]" />
+    </flow>
+	<flow name="get:\products:invoicessftp-config">
+        <logger level="DEBUG" doc:name="Logger" doc:id="95445ac1-d892-4ff1-9b30-efa32b0ba1b1" message='#[payload]'/>
+		<set-variable value="#[attributes.queryParams.category]" doc:name="Set Category" doc:id="50e98e58-9208-4ca9-a783-8081f976a68b" variableName="category"/>
+		<sftp:read doc:name="Read Products File" doc:id="d37481b6-cee8-4c66-8ce7-114e99321e0e" config-ref="SFTP_Config" path="${workingDirectory}/products.csv"  outputMimeType='text/csv; separator=","; header=true'/>
+		<ee:transform doc:name="Mapping Products Data" doc:id="9e8cf89b-f44c-4654-a85b-e88f4757ed90" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import getListProducts from dwLibrairies::ProductsFunctions
+---
+getListProducts(payload, vars.category)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" message="#[payload]" doc:name="Fin Get Products"/>
+    </flow>
+	<flow name="post:\products:application\json:invoicessftp-config">
+        <set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="9d45278e-7a5c-425f-bdfb-e234b3426c31" variableName="id" />
+		<sftp:read doc:name="Read Products File" doc:id="aea0299e-75a3-4112-a385-1118469bff13" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent"/>
+		<set-variable doc:name="Is New Product" doc:id="1b17a557-c18d-4cde-b497-bc130bd6c40d" variableName="IsNewProduct" value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit est introuvable (isEmpty == true)&#10;isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]'/>
+		<validation:is-false doc:name="Is New Product?" doc:id="9f27c7cb-ea6c-4381-9338-174f3b42a6a6" config-ref="Validation_Config" message="NOT_ACCEPTABLE"/>
+		<ee:transform doc:name="Product Data to ADD" doc:id="bf52432a-5f4a-4773-bdb3-ef19503be6aa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain 
+import * from dw::core::Binaries
+---
+// On ajoute manuellement un saut de ligne (\n) avant le contenu CSV
+"\n" ++ write([payload], "application/csv", {"header": false})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<sftp:write doc:name="Add New Product" doc:id="7d33eaeb-acf3-4a0f-9965-26a76150f3d4" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" mode="APPEND">
+		</sftp:write>
+		<logger level="INFO" message="post:\products:application\json:invoicessftp-config" />
     </flow>
 </mule>
