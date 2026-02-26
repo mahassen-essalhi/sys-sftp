@@ -3,6 +3,6 @@ sftp:
   port: "8422"
   username: "linkr"
 
-  
-  
-workingDirectory: upload/theu/Mahassen/Local
+ 
+
+workingDirectory: upload/theu/Mahassen/Local/
