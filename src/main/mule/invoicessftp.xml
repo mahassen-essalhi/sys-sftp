@@ -229,7 +229,27 @@ payload.data filter ($.id == vars.Id)
         <logger level="INFO" message="delete:\products\(id):invoicessftp-config" />
     </flow>
     <flow name="get:\products:invoicessftp-config">
-        <logger level="INFO" message="get:\products:invoicessftp-config" />
+        <logger level="INFO" doc:name="Logger" doc:id="95445ac1-d892-4ff1-9b30-efa32b0ba1b1" message="#[&quot;Ma clé est : &quot; ++ p('mule.encryptionKey')]"/>
+		<set-variable value="#[attributes.queryParams.category]" doc:name="Set Category" doc:id="50e98e58-9208-4ca9-a783-8081f976a68b" variableName="category"/>
+		<sftp:read doc:name="Read Products File" doc:id="d37481b6-cee8-4c66-8ce7-114e99321e0e" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true'/>
+		<ee:transform doc:name="Mapping Products Data" doc:id="9e8cf89b-f44c-4654-a85b-e88f4757ed90" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+// On filtre le payload (le CSV) pour ne garder que les objets 
+// dont la catégorie correspond à celle définie dans vars.category
+(payload filter (item) -> item.category == vars.category )
+    map (product) -> {
+        id: product.id as Number,
+        name: product.name,
+        category: product.category,
+        price: product.price as Number,
+        stock: product.stock as Number
+    }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" message="#[payload]" doc:name="Fin Get Products"/>
     </flow>
     <flow name="post:\products:application\json:invoicessftp-config">
         <logger level="INFO" message="post:\products:application\json:invoicessftp-config" />
