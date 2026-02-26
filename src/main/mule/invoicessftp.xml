@@ -202,7 +202,25 @@ payload.data filter ($.id == vars.Id)
 		<validation:is-false doc:name="Product Exist?" doc:id="b692c4a8-4584-4b95-a745-124a97fb84aa" config-ref="Validation_Config" message="NOT_FOUND" />
         <choice doc:name="Choice" doc:id="588a8e34-f46d-41ef-bd77-e8acde67b738" >
 			<when expression="#[vars.qty != null and vars.qty != 0]">
-				<set-payload value="#[%dw 2.0&#10;output application/csv header=true&#10;---&#10;vars.FileContent map (product) -&gt; {&#10;    id: product.id,&#10;    name: product.name,&#10;    category: product.category,&#10;    price: product.price,&#10;    // On soustrait la quantité récupérée de l'URL au stock actuel&#10;    stock: if (product.id as String == vars.id as String) &#10;                ((product.stock as Number) - (vars.qty as Number))&#10;           else product.stock&#10;}]" doc:name="Edit Stock" doc:id="113ebbd5-b7e5-4afd-acf2-2347db3b7828" />
+				<ee:transform doc:name="Filter on Product Stock Positif" doc:id="3eb46329-ab91-4028-ba4a-84f42574c276" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header=true
+---
+// 1. On crée d'abord la liste mise à jour
+(vars.FileContent map (product) -> {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    stock: if (product.id as String == vars.id as String) 
+                ((product.stock as Number default 0) - (vars.qty as Number default 0))
+           else (product.stock as Number default 0)
+}) 
+// 2. ENSUITE on filtre le résultat de la parenthèse
+filter (item) -> (item.stock > 0)]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
 			</when>
 			<otherwise >
 				<set-payload value="#[%dw 2.0&#10;output application/csv header=true&#10;&#10;&#10;---&#10;// On garde tous les produits SAUF celui qui correspond à l'ID reçu&#10;vars.FileContent filter (product) -&gt; (product.id as String != vars.id)]" doc:name="Delete the product from File content" doc:id="8e3cb359-445d-4b50-ab8c-7f8115229f84" />
