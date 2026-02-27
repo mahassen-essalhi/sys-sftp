@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
-http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<configuration-properties doc:name="Configuration properties" doc:id="6f992a41-7ec2-4750-9df8-b49fd0ae84a1" file="properties/${mule.env}-properties.yaml" />
 	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="ba5e82ca-f2f8-437b-b36c-da20124e9771" >
 		<sftp:connection host="${sftp.host}" port="${sftp.port}" username="${sftp.username}" password="${secure::sftp.password}" >
@@ -12,8 +13,67 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 		</sftp:connection>
 	</sftp:config>
 	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="ea3f7627-489e-46ef-b0cf-096c7a20ab0a" file="properties/secure/${mule.env}-secure-properties.yaml" key="${mule.encryptionKey}" />
-	<error-handler name="globalError_Handler" doc:id="a6ba9dae-07ae-49ef-ae1b-19d6bb598d86" >
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="eda30d14-153e-41a4-91a7-5fbbf025e58b" type="VALIDATION:INVALID_BOOLEAN" >
+	<configuration doc:name="Configuration" doc:id="b2fe3a85-c8b5-4dfc-b327-01738e71d9e8" defaultErrorHandler-ref="globalError_Handler" />
+	<error-handler name="globalError_Handler" doc:id="a6ba9dae-07ae-49ef-ae1b-19d6bb598d86">
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="eda30d14-153e-41a4-91a7-5fbbf025e58b" type="VALIDATION:INVALID_BOOLEAN">
+			<ee:transform doc:name="Error Message" doc:id="57e0206e-22a5-4935-bdb4-145bbd5b9658">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "status": "Error",
+    "message": error.description, // Affichera "NOT_ACCEPTABLE" défini dans votre nœud
+
+    "timestamp": now()
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="b37eb254-d815-4ab0-b7c0-3b6af21e5f53" type="SFTP:ACCESS_DENIED">
+			<ee:transform doc:name="Error Message" doc:id="e5225535-b3f9-407d-9380-b0279f81f6d7">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "status": "Error",
+    "message": error.description, 
+    "errorType": error.errorType.identifier,
+    "timestamp": now()
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="0218708e-05ae-4963-a3a7-83f5800a50ec" type="ANY">
+			<ee:transform doc:name="Error Message" doc:id="4da92a9c-d4f4-48be-8450-74012f216724">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "status": "Error",
+    "message": error.description, // Affichera "NOT_ACCEPTABLE" défini dans votre nœud
+    "errorType": error.errorType.identifier,
+    "timestamp": now()
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a2cbc8e9-5f87-400c-adb9-1262d35473fe" type="SFTP:CONNECTIVITY">
+			<ee:transform doc:name="Error Message" doc:id="ed12f7c7-f6ce-4521-b809-4f4d93287014">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "status": "Error",
+    "message": error.description, 
+    "errorType": error.errorType.identifier,
+    "timestamp": now()
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
 		</on-error-propagate>
 	</error-handler>
 </mule>
