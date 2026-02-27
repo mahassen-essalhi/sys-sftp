@@ -12,4 +12,8 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 		</sftp:connection>
 	</sftp:config>
 	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="ea3f7627-489e-46ef-b0cf-096c7a20ab0a" file="properties/secure/${mule.env}-secure-properties.yaml" key="${mule.encryptionKey}" />
+	<error-handler name="globalError_Handler" doc:id="a6ba9dae-07ae-49ef-ae1b-19d6bb598d86" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="eda30d14-153e-41a4-91a7-5fbbf025e58b" type="VALIDATION:INVALID_BOOLEAN" >
+		</on-error-propagate>
+	</error-handler>
 </mule>
