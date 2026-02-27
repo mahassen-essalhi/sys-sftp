@@ -214,7 +214,7 @@ getListProducts(payload, vars.category)]]></ee:set-payload>
 		<set-variable value="#[payload.id]" doc:name="Set Id" doc:id="0e0f5c46-6ec0-4c10-b5e3-11b8f87c6c2f" variableName="id" />
 		<sftp:read doc:name="Read Products File" doc:id="f46e7071-f1ae-4ef9-980d-f2ee3e2c1e6d" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent" />
 		<set-variable value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit existe (isEmpty != true)&#10;!isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]' doc:name="Is Product Exist" doc:id="c7a422b4-83df-41f0-b7e0-e850975179cb" variableName="IsProductExist" />
-		<validation:is-false doc:name="Product Exist In The File?" doc:id="092a6696-ed4f-4aac-bc40-0f4a0df99cf9" config-ref="Validation_Config" message="NOT_ACCEPTABLE" expression="#[vars.IsProductExist == true]"/>
+		<validation:is-false doc:name="Product Exist In The File?" doc:id="092a6696-ed4f-4aac-bc40-0f4a0df99cf9" config-ref="Validation_Config" expression="#[vars.IsProductExist == true]" message="NOT_ACCEPTABLE"/>
 		<ee:transform doc:name="Product Data to ADD" doc:id="bf52432a-5f4a-4773-bdb3-ef19503be6aa">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
@@ -258,7 +258,7 @@ vars.FileContent map (product) -> {
 		<set-variable value="#[attributes.uriParams.id]" doc:name="Set Id" doc:id="fe642d94-f381-42b7-9b5d-3842813fbeae" variableName="id" />
 		<sftp:read doc:name="Read Products File" doc:id="d43f9de3-f6f0-410f-9e05-9c54e5ce2885" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" outputMimeType='text/csv; separator=","; header=true' target="FileContent" />
 		<set-variable value='#[%dw 2.0&#10;output application/java&#10;import getProductById from dwLibrairies::ProductsFunctions&#10;---&#10;// On vérifie si le produit existe (isEmpty != true)&#10;!isEmpty(getProductById(vars.FileContent default [], (vars.id default "") as String))]' doc:name="Is Product Exist" doc:id="5ccae297-ca21-4f23-a745-bf7070946643" variableName="IsProductExist" />
-		<validation:is-true doc:name="Product Exist?" doc:id="3997a974-28e5-4298-922d-e745e8122354" message="NOT_FOUND" expression="#[vars.IsProductExist == true]"/>
+		<validation:is-true doc:name="Product Exist?" doc:id="3997a974-28e5-4298-922d-e745e8122354" expression="#[vars.IsProductExist == true]" message="NOT_FOUND"/>
 		<logger level="DEBUG" doc:name="End Log" doc:id="8f6b9a93-cd63-49a3-9ca4-39a4881d5ee0" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    "step": "End " ++ flow.name ++ " flow",&#10;    "data": {&#10;        "business": {&#10;            &#10;        },&#10;        "technical": {&#10;            "payload": payload&#10;        }&#10;    }&#10;}]' category="sys-sftp" />
 	</sub-flow>
 	<flow name="delete:\products\(id):invoicessftp-config">
@@ -293,10 +293,5 @@ filter (item) -> (item.stock > 0)]]></ee:set-payload>
 		</choice>
 		<sftp:write doc:name="Delete Product or Edit Stock " doc:id="7fdc084f-6882-419f-a2d3-dd580d49c27d" config-ref="SFTP_Config" path="${workingDirectory}/products.csv" />
 		<logger level="DEBUG" doc:name="End Log" doc:id="d3e52399-5586-4180-96c3-39d7a76a0d3e" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    "step": "End " ++ flow.name ++ " flow",&#10;    "data": {&#10;        "business": {&#10;            &#10;        },&#10;        "technical": {&#10;            "payload": payload&#10;        }&#10;    }&#10;}]' category="sys-sftp" />
-		<error-handler >
-			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5c0849de-70a3-4f23-872f-f3a18719d1b3" type="VALIDATION:INVALID_BOOLEAN">
-				<set-variable value="204" doc:name="httpStatus = 204" doc:id="c513105d-2bfd-41b8-94fa-14ac1a1d5ffd" variableName="httpStatus" />
-			</on-error-propagate>
-		</error-handler>
     </flow>
 </mule>
